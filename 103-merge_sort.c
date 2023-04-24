@@ -1,131 +1,99 @@
 #include "sort.h"
 
 /**
- * print_before_merge - Function that prints all values to the left
- * and right of the array at the midpoint before any merging occurs
- * @array: The unsorted array
- * @temp: The throwaway array
- * @begin: The first index of the array
- * @mid: The midpoint of the array
- * @end: The last index of the array
- * Return: Nothing
+ * int_array_copy - copies an int array of size size
+ *
+ * @array: the array to copy
+ * @size: the wanted size of the copied array
+ *
+ * Return: the new copied array, or NULL on failure
  */
-void print_before_merge(int *array, int *temp, size_t begin, size_t mid,
-			size_t end)
+
+int *int_array_copy(int *array, size_t size)
 {
-	size_t i = begin, j = mid + 1, k = 0;
+	int *new = NULL;
+	size_t i;
+
+	new = malloc(sizeof(int) * size);
+	if (new)
+	{
+		for (i = 0; i < size; i++)
+			new[i] = array[i];
+	}
+
+	return (new);
+}
+
+/**
+ * top_down_merge - merges the two arrays
+ *
+ * @a: the first array of integers
+ * @b: the second array of integers
+ * @size: the size of the final array
+ * @mid: the middle index of the array
+ */
+
+void top_down_merge(int *a, int *b, size_t size, size_t mid)
+{
+	size_t i = 0, j = 0, k;
+
+	for (k = 0; k < size; k++)
+	{
+		if (j >= size - mid || (i < mid && a[i] < (a + mid)[j]))
+			b[k] = a[i++];
+		else
+			b[k] = (a + mid)[j++];
+	}
+
+	for (k = 0; k < size; k++)
+		a[k] = b[k];
+}
+
+/**
+ * top_down_split_merge - merges the two arrays
+ *
+ * @a: the first array of integers
+ * @b: the second array of integers
+ * @size: the size of the final array
+ */
+
+void top_down_split_merge(int *a, int *b, size_t size)
+{
+	size_t mid = size / 2 /*, i = 0, j = 0, k*/;
+
+	if (size < 2)
+		return;
+
+	top_down_split_merge(a, b, mid);
+	top_down_split_merge(a + mid, b + mid, size - mid);
 
 	printf("Merging...\n");
 	printf("[left]: ");
-	while (i <= mid)
-	{
-		temp[k] = array[i];
-		k++, i++;
-	}
-
-	print_array(temp, k);
-	k = 0;
+	print_array(a, mid);
 	printf("[right]: ");
+	print_array(b + mid, size - mid);
 
-	while (j <= end)
-	{
-		temp[k] = array[j];
-		k++, j++;
-	}
-
-	print_array(temp, k);
-}
-
-/**
- * rebuild_array - The workhorse function. Copies the unsorted array
- * to a temporary array, then determines which value goes where
- * @array: The unsorted array
- * @temp: The throwaway array
- * @begin: The first index of the array
- * @mid: The midpoint of the array
- * @end: The last index of the array
- * Return: Nothing
- */
-void rebuild_array(int *array, int *temp, size_t begin, size_t mid, size_t end)
-{
-	size_t i = begin, j = mid + 1, k = 0;
-
-	print_before_merge(array, temp, begin, mid, end);
-
-	while (i <= mid && j <= end)
-	{
-		if (array[i] <= array[j])
-		{
-			temp[k] = array[i];
-			k++, i++;
-		}
-		else
-		{
-			temp[k] = array[j];
-			k++, j++;
-		}
-	}
-
-	while (i <= mid)
-	{
-		temp[k] = array[i];
-		k++, i++;
-	}
-
-	while (j <= end)
-	{
-		temp[k] = array[j];
-		k++, j++;
-	}
+	top_down_merge(a, b, size, mid);
 
 	printf("[Done]: ");
-	print_array(temp, k);
-
-	for (i = begin; i <= end; i++)
-		array[i] = temp[i - begin];
+	print_array(a, size);
 }
 
 /**
- * split_array - Function that "splits" the array. Basically
- * a function that calls itself recursively, as we want to try
- * to break down the array until we get an array of size 1
- * This is known as the top-down merge sort algorithm
- * @array: The unsorted array
- * @temp: The throwaway array
- * @begin: The first index of the array
- * @end: The last index of the array
- * Return: Nothing
+ * merge_sort - sorts an array of integers using merge sort
+ *
+ * @array: the array of integers
+ * @size: the size of the array
  */
-void split_array(int *array, int *temp, size_t begin, size_t end)
-{
-	size_t mid = (end + begin - 1) / 2;
 
-	if (begin < end)
-	{
-		split_array(array, temp, begin, mid);
-		split_array(array, temp, mid + 1, end);
-		rebuild_array(array, temp, begin, mid, end);
-	}
-}
-
-/**
- * merge_sort - The driver function. Handles checking for
- * valid array and creating and freeing the temp array
- * @array: The unsorted array
- * @size: The size of the passed in array
- * Return: Nothing
- */
 void merge_sort(int *array, size_t size)
 {
-	int *temp = NULL;
+	int *work = NULL;
 
-	if (array == NULL || size < 2)
-		return;
-
-	temp = malloc(sizeof(array[0]) * size);
-	if (temp == NULL)
-		return;
-
-	split_array(array, temp, 0, size - 1);
-	free(temp);
+	work = int_array_copy(array, size);
+	if (work)
+	{
+		top_down_split_merge(array, work, size);
+		free(work);
+	}
 } 
