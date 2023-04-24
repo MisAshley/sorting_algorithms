@@ -1,78 +1,105 @@
 #include "sort.h"
-/**
-*swap - the positions of two elements into an array
-*@array: array
-*@item1: array element
-*@item2: array element
-*/
-void swap(int *array, ssize_t item1, ssize_t item2)
-{
-	int tmp;
 
-	tmp = array[item1];
-	array[item1] = array[item2];
-	array[item2] = tmp;
-}
 /**
- *lomuto_partition - lomuto partition sorting scheme implementation
- *@array: array
- *@first: first array element
- *@last: last array element
- *@size: size array
- *Return: return the position of the last element sorted
+ * swap - Function that swaps two elements
+ * @a: The first element to be swapped
+ * @b: The second element to be swapped
+ * Return: Nothing
+ * Description: Note that the values being passed in are
+ * pointers to the value, not the value itself. This is
+ * because passing in the value itself creates a copy of
+ * the value for swapping, but the original themselves
+ * are not affected. We want the originals to be swapped
  */
-int lomuto_partition(int *array, ssize_t first, ssize_t last, size_t size)
+void swap(int *a, int *b)
 {
-	int pivot = array[last];
-	ssize_t current = first, finder;
+	int temp;
 
-	for (finder = first; finder < last; finder++)
+	temp = *a;
+	*a = *b;
+	*b = temp;
+}
+
+/**
+ * partition - Function that "splits" the array up
+ * for quick sort use
+ * @array: The passed in array
+ * @low: The lower end of the array
+ * @high: The upper end of the array
+ * @size: The size of the array. For printing purposes
+ * Return: A number that determines where the beginning
+ * or end of the "newly split" array is at
+ */
+int partition(int *array, int low, int high, size_t size)
+{
+	int pivot = array[high];
+	int i = low - 1, j;
+
+	for (j = low; j <= high - 1; j++)
 	{
-		if (array[finder] < pivot)
+		if (array[j] < pivot)
 		{
-			if (array[current] != array[finder])
+			i++;
+			/* If i and j are in the same index, swapping is pointless */
+			if (array[j] != array[i])
 			{
-				swap(array, current, finder);
+				swap(&array[i], &array[j]);
 				print_array(array, size);
 			}
-			current++;
 		}
 	}
-	if (array[current] != array[last])
+
+	if (array[i + 1] != array[high])
 	{
-		swap(array, current, last);
+		swap(&array[i + 1], &array[high]);
 		print_array(array, size);
 	}
-	return (current);
+	return (i + 1);
 }
+
 /**
- *qs - qucksort algorithm implementation
- *@array: array
- *@first: first array element
- *@last: last array element
- *@size: array size
+ * quick_sort_alt - Function that actually does the quick sort
+ * @array: The passed in array
+ * @low: The lower end of the array
+ * @high: The upper end of the array
+ * @size: The passed in size. For printing purposes
+ * Return: Nothing
  */
-void qs(int *array, ssize_t first, ssize_t last, int size)
+void quick_sort_alt(int *array, int low, int high, size_t size)
 {
-	ssize_t position = 0;
+	int part_i;
 
-
-	if (first < last)
+	if (low < high)
 	{
-		position = lomuto_partition(array, first, last, size);
+		part_i = partition(array, low, high, size);
 
-		qs(array, first, position - 1, size);
-		qs(array, position + 1, last, size);
+		quick_sort_alt(array, low, part_i - 1, size);
+		quick_sort_alt(array, part_i + 1, high, size);
 	}
 }
+
 /**
- *quick_sort - prepare the terrain to quicksort algorithm
- *@array: array
- *@size: array size
+ * quick_sort - Function that implements the quick sort
+ * algorithm
+ * @array: The unsorted array
+ * @size: The size of the passed in array
+ * Return: None
+ * Description: This is actually the driver function. As
+ * the quick sort algorithm requires knowing the beginning
+ * and ending of the array for partitioning purposes,
+ * the quick_sort_alt function is created
  */
 void quick_sort(int *array, size_t size)
 {
-	if (!array || size < 2)
+	int low = 0, high;
+
+	if (array == NULL || size < 2)
 		return;
-	qs(array, 0, size - 1, size);
+
+	/**
+	 * Size is converted to int for high. Negative numbers
+	 * may be needed
+	 */
+	high = (int)size - 1;
+	quick_sort_alt(array, low, high, size);
 }
