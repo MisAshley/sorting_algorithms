@@ -1,110 +1,131 @@
 #include "sort.h"
-#include <stdio.h>
+
 /**
- *_calloc - this is a calloc function
- *@nmemb: number of elemets
- *@size: bit size of each element
- *Return: pointer to memory assignement
+ * print_before_merge - Function that prints all values to the left
+ * and right of the array at the midpoint before any merging occurs
+ * @array: The unsorted array
+ * @temp: The throwaway array
+ * @begin: The first index of the array
+ * @mid: The midpoint of the array
+ * @end: The last index of the array
+ * Return: Nothing
  */
-void *_calloc(unsigned int nmemb, unsigned int size)
+void print_before_merge(int *array, int *temp, size_t begin, size_t mid,
+			size_t end)
 {
-	unsigned int i = 0;
-	char *p;
+	size_t i = begin, j = mid + 1, k = 0;
 
-	if (nmemb == 0 || size == 0)
-		return ('\0');
-	p = malloc(nmemb * size);
-	if (p == '\0')
-		return ('\0');
-	for (i = 0; i < (nmemb * size); i++)
-		p[i] = '\0';
-	return (p);
-}
-/**
- *merge - make a merge
- *@arr: one from start to mid
- *@tmp: temp array used in merge, was created outside to
- *optimize reducing the system calls
- *@start: first element position
- *@mid: array middle
- *@end: last element position
- **/
-void merge(int *arr, int *tmp, int start, int mid, int end)
-{
-	/*  sizes and temp arrays */
-	int size_left = mid - start + 1, size_right = end - mid;
-	int *array_left, *array_right;
-	/* counters */
-	int left, right, i = 0;
-
-	array_left = &tmp[0];
-	array_right = &tmp[size_right];
-	for (left = 0; left < size_left; left++)
-		array_left[left] = arr[start + left];
-	for (right = 0; right < size_right; right++)
-		array_right[right] = arr[mid + 1 + right];
-	left = 0, right = 0, i = start;
-	/* merging tmp arrays into main array*/
-	while (left < size_left && right < size_right)
-	{
-		if (array_left[left] <= array_right[right])
-			arr[i] = array_left[left], left++;
-		else
-			arr[i] = array_right[right], right++;
-		i++;
-	}
-	/* merging remaining left array into main array*/
-	while (left < size_left)
-		arr[i] = array_left[left], left++, i++;
-	/* merging remaining right array into main array*/
-	while (right < size_right)
-		arr[i] = array_right[right], right++, i++;
 	printf("Merging...\n");
 	printf("[left]: ");
-	print_array(array_left, left);
-	printf("[right]: ");
-	print_array(array_right, right);
-	printf("[Done]: ");
-	print_array(&arr[start], left + right);
-}
-/**
- *mergesort - function that sorts an array of integers
- *in ascending order using the Merge sort algorithm
- *@array: array of integers
- *@tmp: temp array used in merge, was created outside to
- *optimize reducing the system calls
- *@start: fisrt element position
- *@end: last element position
- *Return: void
- */
-void mergesort(int *array, int *tmp, int start, int end)
-{
-	int mid;
-
-	mid = (start + end) / 2;
-	if ((start + end) % 2 == 0)
-		mid--;
-	if (mid >= start)
+	while (i <= mid)
 	{
-		mergesort(array, tmp, start, mid);
-		mergesort(array, tmp, mid + 1, end);
-		merge(array, tmp, start, mid, end);
+		temp[k] = array[i];
+		k++, i++;
+	}
+
+	print_array(temp, k);
+	k = 0;
+	printf("[right]: ");
+
+	while (j <= end)
+	{
+		temp[k] = array[j];
+		k++, j++;
+	}
+
+	print_array(temp, k);
+}
+
+/**
+ * rebuild_array - The workhorse function. Copies the unsorted array
+ * to a temporary array, then determines which value goes where
+ * @array: The unsorted array
+ * @temp: The throwaway array
+ * @begin: The first index of the array
+ * @mid: The midpoint of the array
+ * @end: The last index of the array
+ * Return: Nothing
+ */
+void rebuild_array(int *array, int *temp, size_t begin, size_t mid, size_t end)
+{
+	size_t i = begin, j = mid + 1, k = 0;
+
+	print_before_merge(array, temp, begin, mid, end);
+
+	while (i <= mid && j <= end)
+	{
+		if (array[i] <= array[j])
+		{
+			temp[k] = array[i];
+			k++, i++;
+		}
+		else
+		{
+			temp[k] = array[j];
+			k++, j++;
+		}
+	}
+
+	while (i <= mid)
+	{
+		temp[k] = array[i];
+		k++, i++;
+	}
+
+	while (j <= end)
+	{
+		temp[k] = array[j];
+		k++, j++;
+	}
+
+	printf("[Done]: ");
+	print_array(temp, k);
+
+	for (i = begin; i <= end; i++)
+		array[i] = temp[i - begin];
+}
+
+/**
+ * split_array - Function that "splits" the array. Basically
+ * a function that calls itself recursively, as we want to try
+ * to break down the array until we get an array of size 1
+ * This is known as the top-down merge sort algorithm
+ * @array: The unsorted array
+ * @temp: The throwaway array
+ * @begin: The first index of the array
+ * @end: The last index of the array
+ * Return: Nothing
+ */
+void split_array(int *array, int *temp, size_t begin, size_t end)
+{
+	size_t mid = (end + begin - 1) / 2;
+
+	if (begin < end)
+	{
+		split_array(array, temp, begin, mid);
+		split_array(array, temp, mid + 1, end);
+		rebuild_array(array, temp, begin, mid, end);
 	}
 }
+
 /**
- *merge_sort - function that sorts an array of integers
- *in ascending order using the Merge sort algorithm
- *@size: size of the list
- *@array: array of integers
- *Return: void
+ * merge_sort - The driver function. Handles checking for
+ * valid array and creating and freeing the temp array
+ * @array: The unsorted array
+ * @size: The size of the passed in array
+ * Return: Nothing
  */
 void merge_sort(int *array, size_t size)
 {
-	int *tmp;
+	int *temp = NULL;
 
-	if (!array || size < 2)
+	if (array == NULL || size < 2)
 		return;
-	tmp = _calloc(size, sizeof(int));
-	mergesort(array, tmp, 0, size - 1);
-	free(tmp);
-}
+
+	temp = malloc(sizeof(array[0]) * size);
+	if (temp == NULL)
+		return;
+
+	split_array(array, temp, 0, size - 1);
+	free(temp);
+} 
